@@ -8,8 +8,10 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
+        "laravel/socialite": "^5.29",
         "laravel/tinker": "^2.10.1",
-        "predis/predis": "^3.5"
+        "predis/predis": "^3.5",
+        "socialiteproviders/discord": "^4.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
