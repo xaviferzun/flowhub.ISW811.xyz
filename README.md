@@ -49,9 +49,42 @@ mensajería, y un proceso *worker* independiente los consume y ejecuta.
 
 ## 3. Arquitectura
 
-*(Pendiente — se documentará el diagrama de arquitectura junto con el detalle del
-motor de ejecución asíncrono, el patrón adaptador de proveedores, y el manejo de
-credenciales OAuth, a medida que avance la implementación.)*
+FlowHub separa la publicación de trabajos (productor) de su ejecución
+(consumidor), comunicándose de forma asíncrona a través de un broker de
+mensajería. Esto evita que la ejecución de acciones sobre proveedores externos
+bloquee la petición HTTP del usuario.
+
+```mermaid
+flowchart TD
+    U[Usuario] --> A["App web (Laravel)<br/>Productor de trabajos"]
+    A -->|Publica trabajo| R[("Redis<br/>Broker de colas")]
+    R -->|Consume trabajo| W["Worker (queue:work)<br/>Consumidor de trabajos"]
+    W --> O["Proveedores OAuth<br/>APIs externas"]
+    A -->|Lee/escribe automatizaciones| D[("MariaDB<br/>Persistencia de datos")]
+    W -->|Guarda resultados y tokens| D
+```
+
+**Componentes:**
+
+- **App web (Laravel):** recibe las peticiones del usuario, gestiona la
+  configuración de automatizaciones (disparadores, condiciones y acciones) y las
+  persiste en MariaDB. Actúa como **productor**: nunca ejecuta acciones
+  directamente durante la petición HTTP, solo publica el trabajo en la cola.
+- **Redis:** actúa como **broker de mensajería**, desacoplando la publicación del
+  trabajo de su ejecución.
+- **Worker (`php artisan queue:work`):** proceso independiente que actúa como
+  **consumidor**, procesando los trabajos de la cola, ejecutando la cadena de
+  acciones correspondiente, y persistiendo los resultados de ejecución en
+  MariaDB.
+- **MariaDB:** capa de persistencia compartida entre ambos procesos — almacena
+  las automatizaciones configuradas, los tokens OAuth cifrados, y el historial de
+  ejecuciones.
+- **Proveedores OAuth:** servicios externos con los que el worker interactúa en
+  nombre del usuario, mediante tokens obtenidos por delegación (OAuth 2.0).
+
+*(Pendiente ampliar con el detalle del patrón adaptador por proveedor, el manejo
+de reintentos/backoff, y la cola de mensajes fallidos (DLQ), a medida que avance
+la implementación.)*
 
 ## 4. Tecnologías utilizadas
 
