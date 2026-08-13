@@ -1,8 +1,8 @@
 # FlowHub
 
-| | |
+|  |  |
 |---|---|
-| **Universidad** | Universidad Técnica Nacional |
+|   **Universidad Técnica Nacional**|
 | **Carrera** | Ingeniería del Software |
 | **Curso** | ISW-811 — Aplicaciones Web utilizando Software Libre |
 | **Asignación** | 2.º Proyecto Programado |
