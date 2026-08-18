@@ -14,6 +14,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     Route::get('/automations', [AutomationController::class, 'index'])->name('automations.index');
+    Route::get('/automations/create', [AutomationController::class, 'create'])->name('automations.create');
+    Route::post('/automations', [AutomationController::class, 'store'])->name('automations.store');
 
     // TODO (FH-XX): rutas de conexiones OAuth (conectar / listar / revocar proveedores)
 });
