@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,7 +13,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // TODO (FH-XX): rutas CRUD de automatizaciones
+    Route::get('/automations', [AutomationController::class, 'index'])->name('automations.index');
+
     // TODO (FH-XX): rutas de conexiones OAuth (conectar / listar / revocar proveedores)
 });
 
