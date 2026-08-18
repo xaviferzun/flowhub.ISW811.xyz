@@ -91,4 +91,24 @@ class AutomationController extends Controller
 
         return redirect()->route('automations.index');
     }
+
+    //FH-28 Elimina una automatizacion propia. cascadeOnDelete en las migraciones borra trigger/conditions/actions automaticamente
+    public function destroy(Request $request, Automation $automation): RedirectResponse
+    {
+        abort_unless($automation->user_id === $request->user()->id, 403);
+
+        $automation->delete();
+
+        return redirect()->route('automations.index');
+    }
+
+    //FH-28 Activa/desactiva sin borrar el registro
+    public function toggle(Request $request, Automation $automation): RedirectResponse
+    {
+        abort_unless($automation->user_id === $request->user()->id, 403);
+
+        $automation->update(['is_active' => ! $automation->is_active]);
+
+        return redirect()->route('automations.index');
+    }
 }
