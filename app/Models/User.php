@@ -53,4 +53,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Automation::class);
     }
+
+    //FH-21 Cuentas OAuth conectadas por este usuario (GitHub, Discord, etc.)
+    public function connectedAccounts(): HasMany
+    {
+        return $this->hasMany(ConnectedAccount::class);
+    }
 }
