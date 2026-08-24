@@ -2,12 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConnectedAccount;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 use Laravel\Socialite\Facades\Socialite;
 
 class ConnectedAccountController extends Controller
 {
+    /**
+     * Proveedores soportados y su nombre de despliegue.
+     * (Coincide con el whereIn de las rutas /connect/{provider}.)
+     */
+    private const PROVIDERS = [
+        'github' => 'GitHub',
+        'discord' => 'Discord',
+    ];
+
+    /**
+     * Lista las conexiones del usuario, junto con los proveedores
+     * disponibles que todavía no ha conectado.
+     */
+    public function index(Request $request): View
+    {
+        $connectedAccounts = $request->user()->connectedAccounts()->get()->keyBy('provider');
+
+        return view('connections.index', [
+            'providers' => self::PROVIDERS,
+            'connectedAccounts' => $connectedAccounts,
+        ]);
+    }
+
     /**
      * Redirige al usuario al proveedor OAuth para autorizar FlowHub.
      */
@@ -36,7 +61,21 @@ class ConnectedAccountController extends Controller
             ]
         );
 
-        return redirect()->route('dashboard')
+        return redirect()->route('connections.index')
             ->with('status', ucfirst($provider).' conectado correctamente.');
+    }
+
+    /**
+     * Revoca (elimina) una conexión existente del usuario autenticado.
+     */
+    public function destroy(Request $request, ConnectedAccount $connectedAccount): RedirectResponse
+    {
+        abort_unless($connectedAccount->user_id === $request->user()->id, 403);
+
+        $provider = $connectedAccount->provider;
+        $connectedAccount->delete();
+
+        return redirect()->route('connections.index')
+            ->with('status', ucfirst($provider).' desconectado correctamente.');
     }
 }
