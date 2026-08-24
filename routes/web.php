@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AutomationController;
+use App\Http\Controllers\ConnectedAccountController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +20,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
     Route::delete('/automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
 
-    // TODO (FH-XX): rutas de conexiones OAuth (conectar / listar / revocar proveedores)
+    Route::get('/connect/{provider}', [ConnectedAccountController::class, 'redirect'])
+        ->whereIn('provider', ['github', 'discord'])
+        ->name('connect.redirect');
+
+    Route::get('/connect/{provider}/callback', [ConnectedAccountController::class, 'callback'])
+        ->whereIn('provider', ['github', 'discord'])
+        ->name('connect.callback');
 });
 
 Route::middleware('auth')->group(function () {
