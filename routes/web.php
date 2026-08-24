@@ -20,6 +20,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
     Route::delete('/automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
 
+    Route::get('/connections', [ConnectedAccountController::class, 'index'])->name('connections.index');
+    Route::delete('/connections/{connectedAccount}', [ConnectedAccountController::class, 'destroy'])->name('connections.destroy');
+
     Route::get('/connect/{provider}', [ConnectedAccountController::class, 'redirect'])
         ->whereIn('provider', ['github', 'discord'])
         ->name('connect.redirect');
