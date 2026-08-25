@@ -1,12 +1,24 @@
-# FlowHub
+<p align="center">
+  <img src="public/images/flowhub-banner.svg" alt="FlowHub" width="480">
+</p>
 
-|  |  |
-|---|---|
-|   **Universidad Técnica Nacional**|
-| **Carrera** | Ingeniería del Software |
-| **Curso** | ISW-811 — Aplicaciones Web utilizando Software Libre |
-| **Asignación** | 2.º Proyecto Programado |
-| **Profesor** | Misael Matamoros Soto |
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-12-FF2D20?style=flat-square&logo=laravel&logoColor=white" alt="Laravel 12">
+  <img src="https://img.shields.io/badge/PHP-8.2-777BB4?style=flat-square&logo=php&logoColor=white" alt="PHP 8.2">
+  <img src="https://img.shields.io/badge/MariaDB-003545?style=flat-square&logo=mariadb&logoColor=white" alt="MariaDB">
+  <img src="https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis">
+  <br>
+  <br>
+<tr><td align="right"><strong align="center">Universidad Técnica Nacional</strong>
+</p>
+
+<table align="center">
+  
+  <tr><td align="right"><strong>Carrera</strong></td><td>Ingeniería del Software</td></tr>
+  <tr><td align="right"><strong>Curso</strong></td><td>ISW-811 — Aplicaciones Web utilizando Software Libre</td></tr>
+  <tr><td align="right"><strong>Asignación</strong></td><td>2.º Proyecto Programado</td></tr>
+  <tr><td align="right"><strong>Profesor</strong></td><td>Misael Matamoros Soto</td></tr>
+</table>
 
 ## Integrantes
 
@@ -14,6 +26,19 @@
 |---|---|
 | Xavier Fernández | [@xaviferzun](https://github.com/xaviferzun) |
 | Álvaro Víctor Zamora | [@alvi014](https://github.com/alvi014) |
+
+---
+
+## Contenido
+
+- [1. Descripción del proyecto](#1-descripción-del-proyecto)
+- [2. Objetivos](#2-objetivos)
+- [3. Arquitectura](#3-arquitectura)
+- [4. Tecnologías utilizadas](#4-tecnologías-utilizadas)
+- [5. Requisitos previos](#5-requisitos-previos)
+- [6. Instalación y configuración del entorno](#6-instalación-y-configuración-del-entorno)
+- [7. Flujo de trabajo (Git + Jira)](#7-flujo-de-trabajo-git--jira)
+- [8. Licencia](#8-licencia)
 
 ---
 
@@ -59,9 +84,15 @@ flowchart TD
     U[Usuario] --> A["App web (Laravel)<br/>Productor de trabajos"]
     A -->|Publica trabajo| R[("Redis<br/>Broker de colas")]
     R -->|Consume trabajo| W["Worker (queue:work)<br/>Consumidor de trabajos"]
-    W --> O["Proveedores OAuth<br/>APIs externas"]
+    W --> GH[["GitHub API"]]
+    W --> DC[["Discord API"]]
     A -->|Lee/escribe automatizaciones| D[("MariaDB<br/>Persistencia de datos")]
     W -->|Guarda resultados y tokens| D
+
+    classDef github fill:#24292e,color:#ffffff,stroke:#24292e
+    classDef discord fill:#5865F2,color:#ffffff,stroke:#5865F2
+    class GH github
+    class DC discord
 ```
 
 **Componentes:**
@@ -79,8 +110,10 @@ flowchart TD
 - **MariaDB:** capa de persistencia compartida entre ambos procesos — almacena
   las automatizaciones configuradas, los tokens OAuth cifrados, y el historial de
   ejecuciones.
-- **Proveedores OAuth:** servicios externos con los que el worker interactúa en
-  nombre del usuario, mediante tokens obtenidos por delegación (OAuth 2.0).
+- **GitHub / Discord:** proveedores OAuth actualmente soportados. El worker
+  interactúa con sus APIs en nombre del usuario, mediante tokens obtenidos por
+  delegación (OAuth 2.0). Cada uno se conecta desde `/connections` y puede
+  revocarse en cualquier momento.
 
 *(Pendiente ampliar con el detalle del patrón adaptador por proveedor, el manejo
 de reintentos/backoff, y la cola de mensajes fallidos (DLQ), a medida que avance
@@ -94,6 +127,8 @@ la implementación.)*
 | Base de datos | MariaDB |
 | Broker de mensajería / colas | Redis (cliente `predis/predis`) |
 | Frontend | Vite + Tailwind CSS |
+| Autenticación | Laravel Breeze (Blade + Alpine.js) |
+| OAuth de terceros | Laravel Socialite + SocialiteProviders (GitHub, Discord) |
 | Control de versiones | Git + GitHub |
 | Gestión de proyecto | Jira (metodología Scrum) |
 
@@ -167,7 +202,23 @@ QUEUE_CONNECTION=redis
 REDIS_CLIENT=predis
 REDIS_HOST=127.0.0.1
 REDIS_PORT=6379
+
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+GITHUB_REDIRECT_URI=http://flowhub.isw811.xyz/connect/github/callback
+
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+DISCORD_REDIRECT_URI=http://flowhub.isw811.xyz/connect/discord/callback
 ```
+
+> Para `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET` y `DISCORD_CLIENT_ID`/`DISCORD_CLIENT_SECRET`,
+> cada integrante debe registrar su **propia** OAuth App en
+> [github.com/settings/developers](https://github.com/settings/developers) y su
+> **propia** aplicación en
+> [discord.com/developers/applications](https://discord.com/developers/applications),
+> usando las URIs de redirect ya indicadas arriba. Nunca se comparten credenciales
+> entre integrantes.
 
 ### 6.5. Crear la base de datos local
 
@@ -208,12 +259,21 @@ Si la VM utiliza Apache con VirtualHosts, configurar un vhost cuyo `DocumentRoot
 apunte a la carpeta `public/` del proyecto, y agregar el dominio elegido al
 archivo `hosts` local, apuntando a la IP de la VM correspondiente.
 
-### 6.9. Instalar dependencias de JavaScript (opcional, para frontend)
+### 6.9. Instalar dependencias de JavaScript
 
 ```bash
 npm install
 npm run build
 ```
+
+> Si `npm install` se cuelga o el kernel reporta `soft lockup` dentro de una VM
+> Vagrant con carpeta compartida (`vboxsf`), es porque esa carpeta es lenta para
+> los miles de archivos chicos de `node_modules`. Solución: symlink a disco nativo.
+> ```bash
+> mkdir -p /home/vagrant/.node_modules_cache/flowhub
+> ln -s /home/vagrant/.node_modules_cache/flowhub node_modules
+> npm install
+> ```
 
 ## 7. Flujo de trabajo (Git + Jira)
 
