@@ -24,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
     {
         Event::listen(function (SocialiteWasCalled $event) {
             $event->extendSocialite('discord', DiscordProvider::class);
+
+            //FH-35 Segundo driver -  mismo provider de discord, pero resuelve la config de discord_webhook
+            $event->extendSocialite('discord_webhook', DiscordProvider::class);
         });
     }
 }

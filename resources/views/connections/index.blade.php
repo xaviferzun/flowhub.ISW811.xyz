@@ -87,8 +87,39 @@
                         @endif
                     </div>
                 @endforeach
-            </div>
 
+                <div class="p-6 flex items-center justify-between">
+                    <div>
+                        <p class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ __('Discord (publicar en canal)') }}</p>
+
+                        @if ($connectedAccounts->has('discord_webhook'))
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                {{ __('Conectado el') }} {{ $connectedAccounts['discord_webhook']->created_at->format('d/m/Y') }}
+                            </p>
+                        @else
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                {{ __('No conectado') }}
+                            </p>
+                        @endif
+                    </div>
+
+                    @if ($connectedAccounts->has('discord_webhook'))
+                        <form method="POST" action="{{ route('connections.destroy', $connectedAccounts['discord_webhook']) }}">
+                            @csrf
+                            @method('DELETE')
+                            <x-danger-button type="submit">
+                                {{ __('Revocar') }}
+                            </x-danger-button>
+                        </form>
+                    @else
+                        <a href="{{ route('connect.discord-webhook.redirect') }}">
+                            <x-primary-button type="button">
+                                {{ __('Conectar') }}
+                            </x-primary-button>
+                        </a>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

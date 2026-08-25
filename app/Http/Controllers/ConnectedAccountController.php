@@ -78,4 +78,34 @@ class ConnectedAccountController extends Controller
         return redirect()->route('connections.index')
             ->with('status', ucfirst($provider).' desconectado correctamente.');
     }
+
+    //FH-35 Redirige a Discord pidiendo el scope webhook.incoming (autoriza publicar en un canal especifico, no login)
+    public function redirectWebhook(): RedirectResponse
+    {
+        return Socialite::driver('discord_webhook')
+            ->setScopes(['webhook.incoming'])
+            ->redirect();
+    }
+
+    //FH-35 Recibe el callback con la URL de webhook ya autorizada por Discord para el canal elegido por el usuario
+    public function callbackWebhook(Request $request): RedirectResponse
+    {
+        $socialiteUser = Socialite::driver('discord_webhook')->user();
+
+        $request->user()->connectedAccounts()->updateOrCreate(
+            ['provider' => 'discord_webhook'],
+            [
+                'provider_user_id' => $socialiteUser->getId(),
+                'access_token' => $socialiteUser->token,
+                'refresh_token' => $socialiteUser->refreshToken,
+                'expires_at' => $socialiteUser->expiresIn
+                    ? now()->addSeconds($socialiteUser->expiresIn)
+                    : null,
+                'webhook_url' => data_get($socialiteUser->accessTokenResponseBody, 'webhook.url'),
+            ]
+        );
+
+        return redirect()->route('connections.index')
+            ->with('status', 'Discord (webhook) conectado correctamente.');
+    }
 }

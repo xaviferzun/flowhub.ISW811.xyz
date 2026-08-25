@@ -17,6 +17,7 @@ class ConnectedAccount extends Model
         'access_token',
         'refresh_token',
         'expires_at',
+        'webhook_url',
     ];
 
     /**
@@ -28,6 +29,7 @@ class ConnectedAccount extends Model
     protected $hidden = [
         'access_token',
         'refresh_token',
+        'webhook_url',
     ];
 
     protected function casts(): array
@@ -35,6 +37,7 @@ class ConnectedAccount extends Model
         return [
             'access_token' => 'encrypted',
             'refresh_token' => 'encrypted',
+            'webhook_url' => 'encrypted',
             'expires_at' => 'datetime',
         ];
     }
