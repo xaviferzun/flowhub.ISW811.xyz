@@ -1,0 +1,13 @@
+<svg width="520" height="150" viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(20,15) scale(1.1)">
+    <path d="M50,20 Q75,35 78,68" fill="none" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+    <path d="M78,68 Q50,85 22,68" fill="none" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+    <path d="M22,68 Q25,35 50,20" fill="none" stroke="#94a3b8" stroke-width="4" stroke-linecap="round"/>
+    <polygon points="46.4,22.9 41.9,29.1 38.9,23.9" fill="#94a3b8"/>
+    <circle cx="50" cy="20" r="11" fill="#6366f1"/>
+    <circle cx="78" cy="68" r="11" fill="#14b8a6"/>
+    <circle cx="22" cy="68" r="11" fill="#f59e0b"/>
+  </g>
+  <text x="140" y="72" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#1e293b">FlowHub</text>
+  <text x="141" y="98" font-family="Arial, sans-serif" font-size="16" fill="#64748b">Automatización personal, conectada</text>
+</svg>

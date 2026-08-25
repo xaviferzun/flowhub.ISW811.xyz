@@ -16,21 +16,33 @@
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-            @include('layouts.navigation')
 
-            <!-- Page Heading -->
-            @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+            <svg class="fixed -bottom-24 -right-24 w-[520px] h-[520px] text-gray-900 dark:text-white opacity-[0.06] pointer-events-none select-none z-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M50,20 Q75,35 78,68" fill="none" stroke="currentColor" stroke-width="3"/>
+                <path d="M78,68 Q50,85 22,68" fill="none" stroke="currentColor" stroke-width="3"/>
+                <path d="M22,68 Q25,35 50,20" fill="none" stroke="currentColor" stroke-width="3"/>
+                <circle cx="50" cy="20" r="11" fill="currentColor"/>
+                <circle cx="78" cy="68" r="11" fill="currentColor"/>
+                <circle cx="22" cy="68" r="11" fill="currentColor"/>
+            </svg>
 
-            <!-- Page Content -->
-            <main>
-                {{ $slot }}
-            </main>
+            <div class="relative z-10">
+                @include('layouts.navigation')
+
+                <!-- Page Heading -->
+                @isset($header)
+                    <header class="bg-white dark:bg-gray-800 shadow">
+                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endisset
+
+                <!-- Page Content -->
+                <main>
+                    {{ $slot }}
+                </main>
+            </div>
         </div>
     </body>
 </html>
