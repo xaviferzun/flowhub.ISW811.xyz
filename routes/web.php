@@ -30,6 +30,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/connect/{provider}/callback', [ConnectedAccountController::class, 'callback'])
         ->whereIn('provider', ['github', 'discord'])
         ->name('connect.callback');
+
+    //FH-35 Flujo OAuth separado: autoriza webhook.incoming para publicar mensajes en un canal de Discord
+    Route::get('/connect/discord-webhook', [ConnectedAccountController::class, 'redirectWebhook'])
+        ->name('connect.discord-webhook.redirect');
+
+    Route::get('/connect/discord-webhook/callback', [ConnectedAccountController::class, 'callbackWebhook'])
+        ->name('connect.discord-webhook.callback');
 });
 
 Route::middleware('auth')->group(function () {

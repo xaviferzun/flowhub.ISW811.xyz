@@ -47,4 +47,11 @@ return [
         'redirect' => env('DISCORD_REDIRECT_URI'),
     ],
 
+    //FH-35 Segundo driver de Discord: mismo client_id/secret, pero scope y callback distintos (autoriza webhook.incoming para publicar en un canal, no login)
+    'discord_webhook' => [
+        'client_id' => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+        'redirect' => env('DISCORD_WEBHOOK_REDIRECT_URI'),
+    ],
+
 ];
