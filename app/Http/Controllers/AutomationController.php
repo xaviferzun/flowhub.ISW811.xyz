@@ -56,8 +56,9 @@ class AutomationController extends Controller
 
             'conditions' => ['nullable', 'array'],
             'conditions.*.field' => ['required_with:conditions', 'string', 'max:255'],
-            'conditions.*.operator' => ['required_with:conditions', 'string', 'max:50'],
+            'conditions.*.operator' => ['required_with:conditions', 'string', 'in:equals,not_equals,contains,not_contains,starts_with,ends_with,greater_than,less_than'],
             'conditions.*.value' => ['required_with:conditions', 'string', 'max:255'],
+            'conditions.*.logic' => ['nullable', 'string', 'in:and,or'],
 
             'actions' => ['required', 'array', 'min:1'],
             'actions.*.type' => ['required', 'string', 'in:'.implode(',', array_keys($this->actionTypes()))],
@@ -77,7 +78,12 @@ class AutomationController extends Controller
             ]);
 
             foreach ($validated['conditions'] ?? [] as $condition) {
-                $automation->conditions()->create($condition);
+                $automation->conditions()->create([
+                    'field' => $condition['field'],
+                    'operator' => $condition['operator'],
+                    'value' => $condition['value'],
+                    'logic' => $condition['logic'] ?? 'and',
+                ]);
             }
 
             foreach ($validated['actions'] as $index => $action) {

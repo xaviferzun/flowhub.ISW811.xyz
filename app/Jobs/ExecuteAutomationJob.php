@@ -118,21 +118,33 @@ class ExecuteAutomationJob implements ShouldQueue
         );
     }
 
-    //FH-38 Todas las condiciones deben cumplirse (AND) para que la automatizacion continue.
-    //Una automatizacion sin condiciones configuradas pasa siempre (son opcionales, requerimiento #3).
+    //FH-51 Evalua las condiciones en orden, combinandolas secuencialmente con su campo 'logic'
+    //(and/or). La primera condicion no tiene 'anterior' con quien combinarse, asi que su propio
+    //valor es el punto de partida. Sin condiciones, pasa siempre (son opcionales, requerimiento #3).
     private function conditionsPass(Automation $automation): bool
     {
-        foreach ($automation->conditions as $condition) {
-            if (! $this->evaluateCondition($condition)) {
-                return false;
-            }
+        $conditions = $automation->conditions;
+
+        if ($conditions->isEmpty()) {
+            return true;
         }
 
-        return true;
+        $result = $this->evaluateCondition($conditions->first());
+
+        foreach ($conditions->skip(1) as $condition) {
+            $current = $this->evaluateCondition($condition);
+
+            $result = $condition->logic === 'or'
+                ? $result || $current
+                : $result && $current;
+        }
+
+        return $result;
     }
 
     //FH-38 Evalua una condicion contra los datos del trigger. El campo se busca tal cual en
     //$triggerData (mismos nombres que usa TemplateInterpolator para {{trigger.campo}}).
+    //FH-51 Comparadores ampliados: starts_with, ends_with y not_contains sumados a los originales.
     private function evaluateCondition(Condition $condition): bool
     {
         $actual = $this->triggerData[$condition->field] ?? null;
@@ -142,6 +154,9 @@ class ExecuteAutomationJob implements ShouldQueue
             'equals' => (string) $actual === $expected,
             'not_equals' => (string) $actual !== $expected,
             'contains' => str_contains((string) $actual, $expected),
+            'not_contains' => ! str_contains((string) $actual, $expected),
+            'starts_with' => str_starts_with((string) $actual, $expected),
+            'ends_with' => str_ends_with((string) $actual, $expected),
             'greater_than' => is_numeric($actual) && is_numeric($expected) && (float) $actual > (float) $expected,
             'less_than' => is_numeric($actual) && is_numeric($expected) && (float) $actual < (float) $expected,
             default => false,

@@ -10,7 +10,7 @@ class Condition extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['automation_id', 'field', 'operator', 'value'];
+    protected $fillable = ['automation_id', 'field', 'operator', 'value', 'logic'];
 
     public function automation(): BelongsTo
     {
