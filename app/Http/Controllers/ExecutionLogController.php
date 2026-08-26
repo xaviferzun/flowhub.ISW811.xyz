@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ExecutionLog;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ExecutionLogController extends Controller
 {
@@ -24,5 +25,16 @@ class ExecutionLogController extends Controller
             'executionLogs' => $executionLogs,
             'status' => $status,
         ]);
+    }
+
+    //Muestra el detalle completo de una ejecucion: input, resultado, y el error completo si fallo.
+    //Solo accesible si la ejecucion pertenece a una automatizacion del usuario logueado.
+    public function show(Request $request, ExecutionLog $executionLog): View
+    {
+        if ($executionLog->automation->user_id !== $request->user()->id) {
+            throw new NotFoundHttpException();
+        }
+
+        return view('execution-logs.show', ['executionLog' => $executionLog]);
     }
 }

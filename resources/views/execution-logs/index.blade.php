@@ -23,7 +23,7 @@
 
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg divide-y divide-gray-200 dark:divide-gray-700">
                 @forelse ($executionLogs as $log)
-                    <div class="p-6">
+                    <a href="{{ route('execution-logs.show', $log) }}" class="block p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <div class="flex items-center justify-between gap-4">
                             <p class="text-lg font-medium text-gray-900 dark:text-gray-100">
                                 {{ $log->automation->name }}
@@ -51,7 +51,7 @@
                                 {{ $log->error_detail }}
                             </p>
                         @endif
-                    </div>
+                    </a>
                 @empty
                     <div class="p-6 text-sm text-gray-500 dark:text-gray-400">
                         {{ __('No hay ejecuciones registradas todavía.') }}
