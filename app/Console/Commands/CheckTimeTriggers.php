@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\ExecuteAutomationJob;
 use App\Models\Trigger;
 use App\Triggers\ScheduleCronTrigger;
 use Illuminate\Console\Command;
@@ -21,9 +22,10 @@ class CheckTimeTriggers extends Command
 
         foreach ($triggers as $trigger) {
             if ($handler->shouldFire($trigger)) {
-                $this->info("Trigger #{$trigger->id} disparado (automation #{$trigger->automation_id})");
+                //Publica el trabajo en la cola; el worker lo procesa despues, en otro proceso.
+                ExecuteAutomationJob::dispatch($trigger->automation_id, $handler->getData($trigger));
 
-                //Pendiente el job que ejecuta la cadena de acciones de la FH-38 en adelnate
+                $this->info("Trigger #{$trigger->id} disparado (automation #{$trigger->automation_id}), job encolado");
             }
         }
     }
