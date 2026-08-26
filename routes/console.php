@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 //FH-33 Revisa triggers schedule.cron cada minuto siguiendo el requerimiento 4 - disparador basado en tiempo
 Schedule::command('automations:check-time-triggers')->everyMinute();
+
+//FH-31 Disparador basado en eventos via polling: revisa la API de GitHub cada 2 minutos
+Schedule::command('automations:check-github-issue-triggers')->everyTwoMinutes();

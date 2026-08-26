@@ -10,10 +10,11 @@ class Trigger extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['automation_id', 'type', 'config'];
+    protected $fillable = ['automation_id', 'type', 'config', 'last_checked_at'];
 
     protected $casts = [
         'config' => 'array',
+        'last_checked_at' => 'datetime',
     ];
 
     public function automation(): BelongsTo
