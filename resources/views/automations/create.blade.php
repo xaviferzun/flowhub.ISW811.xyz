@@ -12,7 +12,7 @@
                     step: 1,
                     conditions: [],
                     actions: [{ type: '', value: '' }],
-                    addCondition() { this.conditions.push({ field: '', operator: '', value: '' }) },
+                    addCondition() { this.conditions.push({ field: '', operator: 'equals', value: '', logic: 'and' }) },
                     removeCondition(i) { this.conditions.splice(i, 1) },
                     addAction() { this.actions.push({ type: '', value: '' }) },
                     removeAction(i) { this.actions.splice(i, 1) },
@@ -72,13 +72,30 @@
                         <p class="text-sm text-gray-500 mb-3">Opcional: Aplicar filtros que deben cumplirse para que la automatización continúe.</p>
 
                         <template x-for="(condition, index) in conditions" :key="index">
-                            <div class="flex gap-2 mb-2">
+                            <div class="flex gap-2 mb-2 items-center">
+                                <select :name="`conditions[${index}][logic]`" x-model="condition.logic"
+                                        x-show="index > 0" class="border-gray-300 rounded-md w-24">
+                                    <option value="and">Y (AND)</option>
+                                    <option value="or">O (OR)</option>
+                                </select>
+
                                 <input type="text" :name="`conditions[${index}][field]`" x-model="condition.field"
-                                       placeholder="Campo" class="border-gray-300 rounded-md w-1/3">
-                                <input type="text" :name="`conditions[${index}][operator]`" x-model="condition.operator"
-                                       placeholder="Operador" class="border-gray-300 rounded-md w-1/3">
+                                       placeholder="Campo" class="border-gray-300 rounded-md w-1/4">
+
+                                <select :name="`conditions[${index}][operator]`" x-model="condition.operator"
+                                        class="border-gray-300 rounded-md w-1/4">
+                                    <option value="equals">Igual a</option>
+                                    <option value="not_equals">Distinto de</option>
+                                    <option value="contains">Contiene</option>
+                                    <option value="not_contains">No contiene</option>
+                                    <option value="starts_with">Empieza con</option>
+                                    <option value="ends_with">Termina con</option>
+                                    <option value="greater_than">Mayor que</option>
+                                    <option value="less_than">Menor que</option>
+                                </select>
+
                                 <input type="text" :name="`conditions[${index}][value]`" x-model="condition.value"
-                                       placeholder="Valor" class="border-gray-300 rounded-md w-1/3">
+                                       placeholder="Valor" class="border-gray-300 rounded-md w-1/4">
                                 <button type="button" @click="removeCondition(index)" class="text-red-500">✕</button>
                             </div>
                         </template>
