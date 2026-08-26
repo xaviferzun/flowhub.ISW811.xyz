@@ -6,6 +6,7 @@ use App\Actions\DiscordSendMessageAction;
 use App\Actions\GithubCreateIssueAction;
 use App\Contracts\ActionHandler;
 use App\Models\Automation;
+use App\Models\AutomationExecution;
 use App\Models\Condition;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -32,10 +33,14 @@ class ExecuteAutomationJob implements ShouldQueue
      * @param int $automationId ID de la automatizacion a ejecutar.
      * @param array $triggerData Datos que produjo el disparador, usados para evaluar
      *                           condiciones e interpolar las plantillas de las acciones.
+     * @param string $executionId Clave unica (UUID) de este disparo especifico. Si el mismo
+     *                            trabajo se reprocesa, llega con la misma clave, lo que permite
+     *                            detectarlo y no repetir las acciones.
      */
     public function __construct(
         public int $automationId,
         public array $triggerData = [],
+        public string $executionId = '',
     ) {
     }
 
@@ -44,6 +49,11 @@ class ExecuteAutomationJob implements ShouldQueue
      */
     public function handle(): void
     {
+        if ($this->executionId !== '' && $this->alreadyProcessed()) {
+            Log::info("ExecuteAutomationJob: execution {$this->executionId} ya fue procesada, se descarta para no repetir acciones.");
+            return;
+        }
+
         $automation = Automation::with(['conditions', 'actions' => fn ($query) => $query->orderBy('order')])
             ->find($this->automationId);
 
@@ -74,6 +84,22 @@ class ExecuteAutomationJob implements ShouldQueue
             $handler = new $handlerClass();
             $handler->execute($action, $this->triggerData);
         }
+    }
+
+    //FH-41 Revisa si esta clave de ejecucion ya fue registrada. Si no existe, la registra
+    //de una vez (reclama la clave) para que un reproceso posterior la encuentre y se detenga aqui.
+    private function alreadyProcessed(): bool
+    {
+        if (AutomationExecution::where('execution_id', $this->executionId)->exists()) {
+            return true;
+        }
+
+        AutomationExecution::create([
+            'execution_id' => $this->executionId,
+            'automation_id' => $this->automationId,
+        ]);
+
+        return false;
     }
 
     //FH-38 Todas las condiciones deben cumplirse (AND) para que la automatizacion continue.

@@ -6,6 +6,7 @@ use App\Jobs\ExecuteAutomationJob;
 use App\Models\Trigger;
 use App\Triggers\ScheduleCronTrigger;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 class CheckTimeTriggers extends Command
 {
@@ -22,8 +23,11 @@ class CheckTimeTriggers extends Command
 
         foreach ($triggers as $trigger) {
             if ($handler->shouldFire($trigger)) {
-                //Publica el trabajo en la cola; el worker lo procesa despues, en otro proceso.
-                ExecuteAutomationJob::dispatch($trigger->automation_id, $handler->getData($trigger));
+                //Cada disparo tiene su propia clave unica; si el trabajo se reprocesa, la clave
+                //no cambia, y ExecuteAutomationJob la usa para no repetir las acciones.
+                $executionId = (string) Str::uuid();
+
+                ExecuteAutomationJob::dispatch($trigger->automation_id, $handler->getData($trigger), $executionId);
 
                 $this->info("Trigger #{$trigger->id} disparado (automation #{$trigger->automation_id}), job encolado");
             }
