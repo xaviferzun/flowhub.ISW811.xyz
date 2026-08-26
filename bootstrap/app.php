@@ -11,7 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        //FH-53 El endpoint del servidor MCP lo llaman clientes externos sin sesion de navegador,
+        //asi que no pueden mandar token CSRF. Se autentica por el token secreto en la URL en su lugar.
+        $middleware->validateCsrfTokens(except: ['mcp/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
