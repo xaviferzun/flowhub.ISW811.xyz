@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\DiscordSendMessageAction;
+use App\Actions\GithubCreateIssueAction;
 use App\Contracts\ActionHandler;
 use App\Models\Automation;
 use App\Models\AutomationExecution;
@@ -21,11 +22,11 @@ class ExecuteAutomationJob implements ShouldQueue
 
     //FH-38 Mapa tipo de accion => clase adaptadora (patron adaptador, restriccion #3 del enunciado).
     //Sumar un proveedor nuevo solo implica agregar una entrada aqui, sin tocar el resto del job.
-    //github.create_issue y email.send se suman cuando sus adaptadores esten listos.
+    //email.send se suma cuando su adaptador este listo.
     private const ACTION_HANDLERS = [
         'discord.send_message' => DiscordSendMessageAction::class,
+        'github.create_issue' => GithubCreateIssueAction::class,
     ];
-
     /**
      * Create a new job instance.
      *
