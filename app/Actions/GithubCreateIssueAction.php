@@ -17,8 +17,7 @@ class GithubCreateIssueAction implements ActionHandler
         $repo = $action->config['value'] ?? null;
 
         if (! $repo) {
-            Log::warning("Accion github.create_issue sin repo configurado (action #{$action->id})");
-            return;
+            throw new \RuntimeException("Accion github.create_issue sin repo configurado (action #{$action->id})");
         }
 
         $connection = $action->automation->user
@@ -27,8 +26,7 @@ class GithubCreateIssueAction implements ActionHandler
             ->first();
 
         if (! $connection) {
-            Log::warning("Accion github.create_issue sin conexion GitHub activa (automation #{$action->automation_id})");
-            return;
+            throw new \RuntimeException("Accion github.create_issue sin conexion GitHub activa (automation #{$action->automation_id})");
         }
 
         $interpolator = new TemplateInterpolator();
@@ -40,7 +38,7 @@ class GithubCreateIssueAction implements ActionHandler
             ]);
 
         if ($response->failed()) {
-            Log::error("Fallo al crear issue en GitHub (automation #{$action->automation_id}): {$response->status()}");
+            throw new \RuntimeException("Fallo al crear issue en GitHub (automation #{$action->automation_id}): {$response->status()}");
         }
     }
 }
