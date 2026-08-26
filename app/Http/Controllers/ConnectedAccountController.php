@@ -38,7 +38,14 @@ class ConnectedAccountController extends Controller
      */
     public function redirect(string $provider): RedirectResponse
     {
-        return Socialite::driver($provider)->redirect();
+        $driver = Socialite::driver($provider);
+
+        //FH-36 GitHub necesita el scope repo para poder crear issues en nombre del usuario (github.create_issue)
+        if ($provider === 'github') {
+            $driver->scopes(['repo']);
+        }
+
+        return $driver->redirect();
     }
 
     /**
