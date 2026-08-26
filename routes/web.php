@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\ConnectedAccountController;
+use App\Http\Controllers\FailedJobController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/connect/discord-webhook/callback', [ConnectedAccountController::class, 'callbackWebhook'])
         ->name('connect.discord-webhook.callback');
+
+    Route::get('/failed-jobs', [FailedJobController::class, 'index'])->name('failed-jobs.index');
 });
 
 Route::middleware('auth')->group(function () {

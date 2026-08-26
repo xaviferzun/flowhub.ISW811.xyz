@@ -46,14 +46,40 @@
                                         </button>
                                     </form>
 
-                                    <form method="POST" action="{{ route('automations.destroy', $automation) }}"
-                                          onsubmit="return confirm('¿Eliminar esta automatización? Esta acción no se puede deshacer.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-sm text-red-600 hover:underline">
-                                            {{ __('Eliminar') }}
-                                        </button>
-                                    </form>
+                                    <button
+                                        type="button"
+                                        x-data=""
+                                        x-on:click="$dispatch('open-modal', 'confirm-automation-deletion-{{ $automation->id }}')"
+                                        class="text-sm text-red-600 hover:underline"
+                                    >
+                                        {{ __('Eliminar') }}
+                                    </button>
+
+                                    <x-modal name="confirm-automation-deletion-{{ $automation->id }}" focusable maxWidth="md">
+                                        <div class="p-6">
+                                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                {{ __('¿Eliminar esta automatización?') }}
+                                            </h2>
+
+                                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                                {{ __('Esta acción no se puede deshacer.') }}
+                                            </p>
+
+                                            <div class="mt-6 flex justify-end gap-3">
+                                                <x-secondary-button x-on:click="$dispatch('close')">
+                                                    {{ __('Cancelar') }}
+                                                </x-secondary-button>
+
+                                                <form method="POST" action="{{ route('automations.destroy', $automation) }}">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <x-danger-button type="submit">
+                                                        {{ __('Eliminar') }}
+                                                    </x-danger-button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </x-modal>
                                 </div>
                             </li>
                         @endforeach
