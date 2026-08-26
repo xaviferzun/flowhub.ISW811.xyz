@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\DiscordSendMessageAction;
+use App\Actions\EmailSendAction;
 use App\Actions\GithubCreateIssueAction;
 use App\Contracts\ActionHandler;
 use App\Models\Automation;
@@ -32,6 +33,7 @@ class ExecuteAutomationJob implements ShouldQueue
     private const ACTION_HANDLERS = [
         'discord.send_message' => DiscordSendMessageAction::class,
         'github.create_issue' => GithubCreateIssueAction::class,
+        'email.send' => EmailSendAction::class,
     ];
     /**
      * Create a new job instance.
