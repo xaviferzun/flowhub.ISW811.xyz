@@ -9,9 +9,12 @@ use App\Contracts\ActionHandler;
 use App\Models\Automation;
 use App\Models\AutomationExecution;
 use App\Models\Condition;
+use App\Models\ExecutionLog;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Throwable;
 
 //FH-38 Job consumidor: recibe el ID de una automatizacion ya disparada, recorre sus condiciones
 //y, si todas se cumplen, ejecuta la cadena de acciones en orden contra el ActionHandler
@@ -80,6 +83,8 @@ class ExecuteAutomationJob implements ShouldQueue
             return;
         }
 
+        $executedActions = [];
+
         foreach ($automation->actions as $action) {
             $handlerClass = self::ACTION_HANDLERS[$action->type] ?? null;
 
@@ -91,12 +96,38 @@ class ExecuteAutomationJob implements ShouldQueue
             /** @var ActionHandler $handler */
             $handler = new $handlerClass();
             $handler->execute($action, $this->triggerData);
+            $executedActions[] = $action->type;
         }
 
         //FH-42 Recien aca, con todas las acciones ya ejecutadas sin errores, se marca la ejecucion
         //como procesada. Si algo lanzo una excepcion antes de llegar aca, no se marca nada, y el
         //reintento (tries/backoff de arriba) puede volver a correr todo desde cero.
         $this->markProcessed();
+
+        //FH-45 Deja constancia de la ejecucion exitosa para la vista de historial.
+        $this->logExecution('success', ['actions' => $executedActions]);
+    }
+
+    //FH-45 Laravel llama este metodo automaticamente cuando el job agota todos sus reintentos
+    //y queda definitivamente fallido (el mismo momento en que cae en failed_jobs). Deja
+    //constancia de ese fallo para la vista de historial.
+    public function failed(Throwable $exception): void
+    {
+        $this->logExecution('failed', null, $exception->getMessage());
+    }
+
+    //FH-45 Guarda el resultado de esta ejecucion (exitosa o fallida) para poder consultarlo
+    //despues en la vista de historial.
+    private function logExecution(string $status, ?array $result = null, ?string $errorDetail = null): void
+    {
+        ExecutionLog::create([
+            'execution_id' => $this->executionId !== '' ? $this->executionId : (string) Str::uuid(),
+            'automation_id' => $this->automationId,
+            'status' => $status,
+            'input_data' => $this->triggerData,
+            'result' => $result,
+            'error_detail' => $errorDetail,
+        ]);
     }
 
     //FH-41 Revisa si esta clave de ejecucion ya fue registrada como completada.
