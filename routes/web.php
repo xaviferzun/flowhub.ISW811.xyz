@@ -4,6 +4,7 @@ use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\ConnectedAccountController;
 use App\Http\Controllers\ExecutionLogController;
 use App\Http\Controllers\FailedJobController;
+use App\Http\Controllers\McpServerController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TwoFactorController;
@@ -11,6 +12,10 @@ use App\Http\Controllers\TwoFactorController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+//FH-53 Endpoint publico del servidor MCP propio: no lleva middleware de sesion porque lo
+//consumen clientes MCP externos, autenticados por el token secreto en la URL (no por login).
+Route::post('/mcp/{token}', [McpServerController::class, 'handle'])->name('mcp.handle');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
