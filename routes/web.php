@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/failed-jobs', [FailedJobController::class, 'index'])->name('failed-jobs.index');
 
     Route::get('/execution-logs', [ExecutionLogController::class, 'index'])->name('execution-logs.index');
+    Route::get('/execution-logs/{executionLog}', [ExecutionLogController::class, 'show'])->name('execution-logs.show');
 });
 
 Route::middleware('auth')->group(function () {
