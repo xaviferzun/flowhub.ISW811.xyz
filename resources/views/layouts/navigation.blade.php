@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('connections.index')" :active="request()->routeIs('connections.*')">
                         {{ __('Conexiones') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('failed-jobs.index')" :active="request()->routeIs('failed-jobs.*')">
+                        {{ __('Jobs fallidos') }}
+                    </x-nav-link>
                 </div>
             </div>
 
@@ -81,6 +84,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('connections.index')" :active="request()->routeIs('connections.*')">
                 {{ __('Conexiones') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('failed-jobs.index')" :active="request()->routeIs('failed-jobs.*')">
+                {{ __('Jobs fallidos') }}
             </x-responsive-nav-link>
         </div>
 
