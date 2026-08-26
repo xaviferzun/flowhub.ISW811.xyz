@@ -17,6 +17,7 @@ class ConnectedAccountController extends Controller
     private const PROVIDERS = [
         'github' => 'GitHub',
         'discord' => 'Discord',
+        'gitlab' => 'GitLab',
     ];
 
     /**

@@ -30,11 +30,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/connections/{connectedAccount}', [ConnectedAccountController::class, 'destroy'])->name('connections.destroy');
 
     Route::get('/connect/{provider}', [ConnectedAccountController::class, 'redirect'])
-        ->whereIn('provider', ['github', 'discord'])
+        ->whereIn('provider', ['github', 'discord', 'gitlab'])
         ->name('connect.redirect');
 
     Route::get('/connect/{provider}/callback', [ConnectedAccountController::class, 'callback'])
-        ->whereIn('provider', ['github', 'discord'])
+        ->whereIn('provider', ['github', 'discord', 'gitlab'])
         ->name('connect.callback');
 
     //FH-35 Flujo OAuth separado: autoriza webhook.incoming para publicar mensajes en un canal de Discord
