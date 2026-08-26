@@ -24,7 +24,7 @@
 
 | Nombre | Usuario de GitHub |
 |---|---|
-| Xavier Fernández | [@xaviferzun](https://github.com/xaviferzun) |
+| Xavier Fernández Zúñiga | [@xaviferzun](https://github.com/xaviferzun) |
 | Álvaro Víctor Zamora | [@alvi014](https://github.com/alvi014) |
 
 ---
@@ -34,11 +34,12 @@
 - [1. Descripción del proyecto](#1-descripción-del-proyecto)
 - [2. Objetivos](#2-objetivos)
 - [3. Arquitectura](#3-arquitectura)
-- [4. Tecnologías utilizadas](#4-tecnologías-utilizadas)
-- [5. Requisitos previos](#5-requisitos-previos)
-- [6. Instalación y configuración del entorno](#6-instalación-y-configuración-del-entorno)
-- [7. Flujo de trabajo (Git + Jira)](#7-flujo-de-trabajo-git--jira)
-- [8. Licencia](#8-licencia)
+- [4. Cobertura del enunciado](#4-cobertura-del-enunciado)
+- [5. Tecnologías utilizadas](#5-tecnologías-utilizadas)
+- [6. Requisitos previos](#6-requisitos-previos)
+- [7. Instalación y configuración del entorno](#7-instalación-y-configuración-del-entorno)
+- [8. Flujo de trabajo (Git + Jira)](#8-flujo-de-trabajo-git--jira)
+- [9. Licencia](#9-licencia)
 
 ---
 
@@ -115,11 +116,38 @@ flowchart TD
   delegación (OAuth 2.0). Cada uno se conecta desde `/connections` y puede
   revocarse en cualquier momento.
 
-*(Pendiente ampliar con el detalle del patrón adaptador por proveedor, el manejo
-de reintentos/backoff, y la cola de mensajes fallidos (DLQ), a medida que avance
-la implementación.)*
+## 4. Cobertura del enunciado
 
-## 4. Tecnologías utilizadas
+**Requerimientos funcionales:**
+
+| Requerimiento | Implementado en |
+|---|---|
+| Registro e inicio de sesión | `app/Http/Controllers/Auth/` |
+| Conexión OAuth (2+ proveedores), consultar y revocar | `ConnectedAccountController.php`, `/connections` |
+| CRUD de automatizaciones (trigger + condiciones + acciones) | `AutomationController.php` |
+| Disparadores basados en evento y en tiempo | Tiempo (`schedule.cron`) implementado — `CheckTimeTriggers.php`. Basado en evento (webhook/polling) pendiente |
+| Acciones: ≥3 tipos, 2+ proveedores | Discord, GitHub, Email — `app/Actions/` |
+| Mapeo de datos disparador → acciones (`{{trigger.campo}}`) | `TemplateInterpolator.php` |
+| Motor de ejecución asíncrono | `ExecuteAutomationJob.php` + Redis |
+| Idempotencia, reintentos con backoff, DLQ | `ExecuteAutomationJob.php`; DLQ vía `failed_jobs` + `FailedJobController.php` |
+| Bitácora de ejecuciones | `ExecutionLog.php` |
+| Aislamiento por usuario | Consultas vía `$request->user()`, `abort_unless` en operaciones de escritura |
+| 2FA (opcional) | `pragmarx/google2fa` — `TwoFactorController.php` |
+
+**Restricciones arquitectónicas:**
+
+| Restricción | Implementado en |
+|---|---|
+| Web y worker como procesos separados | `serve` + `queue:work` |
+| Broker externo real | Redis |
+| Patrón adaptador por proveedor | `TriggerHandler.php`, `ActionHandler.php` |
+| Credenciales cifradas en reposo | Cast `encrypted` en tokens, `webhook_url`, `google2fa_secret` |
+| Endpoint webhook público | Pendiente |
+| Rate limits + retries | Reintentos con backoff sí; rate-limit específico por proveedor no |
+| Configuración por entorno (`.env`) | Sección 6.4 |
+| Documentación mínima | Este README |
+
+## 5. Tecnologías utilizadas
 
 | Componente | Tecnología |
 |---|---|
@@ -132,7 +160,7 @@ la implementación.)*
 | Control de versiones | Git + GitHub |
 | Gestión de proyecto | Jira (metodología Scrum) |
 
-## 5. Requisitos previos
+## 6. Requisitos previos
 
 - PHP 8.2 y Composer
 - MariaDB (o motor MySQL compatible)
@@ -143,9 +171,9 @@ Cada integrante del equipo trabaja sobre su propia máquina virtual (Vagrant,
 Debian 12, PHP 8.2, Apache, MariaDB), replicando el entorno de forma
 independiente, igual que en el Proyecto 1 del curso.
 
-## 6. Instalación y configuración del entorno
+## 7. Instalación y configuración del entorno
 
-### 6.1. Clonar el repositorio
+### 7.1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/xaviferzun/flowhub.ISW811.xyz.git
@@ -160,13 +188,13 @@ git config user.name "<tu-usuario-de-github>"
 git config user.email "<tu-correo>"
 ```
 
-### 6.2. Instalar dependencias de PHP
+### 7.2. Instalar dependencias de PHP
 
 ```bash
 composer install
 ```
 
-### 6.3. Instalar y activar Redis (si la VM no lo tiene aún)
+### 7.3. Instalar y activar Redis (si la VM no lo tiene aún)
 
 ```bash
 sudo apt update
@@ -175,7 +203,7 @@ sudo systemctl enable redis-server --now
 redis-cli ping   # debe responder PONG
 ```
 
-### 6.4. Configurar variables de entorno
+### 7.4. Configurar variables de entorno
 
 ```bash
 cp .env.example .env
@@ -220,7 +248,7 @@ DISCORD_REDIRECT_URI=http://flowhub.isw811.xyz/connect/discord/callback
 > usando las URIs de redirect ya indicadas arriba. Nunca se comparten credenciales
 > entre integrantes.
 
-### 6.5. Crear la base de datos local
+### 7.5. Crear la base de datos local
 
 Cada integrante crea su propia base de datos, independiente de la de sus
 compañeros:
@@ -232,13 +260,13 @@ GRANT ALL PRIVILEGES ON <nombre_de_tu_base_de_datos>.* TO '<tu_usuario_de_base_d
 FLUSH PRIVILEGES;"
 ```
 
-### 6.6. Ejecutar las migraciones
+### 7.6. Ejecutar las migraciones
 
 ```bash
 php artisan migrate
 ```
 
-### 6.7. Verificar el ciclo productor-worker
+### 7.7. Verificar el ciclo productor-worker
 
 El repositorio incluye un `TestJob` de prueba (`app/Jobs/TestJob.php`) para validar
 que la aplicación (productor) publica trabajos en Redis correctamente y que un
@@ -253,13 +281,13 @@ tail -n 5 storage/logs/laravel.log
 Si el log muestra el mensaje `Job de prueba ejecutado correctamente desde
 TestJob`, el entorno queda funcional de extremo a extremo.
 
-### 6.8. Servir la aplicación (Apache, opcional)
+### 7.8. Servir la aplicación (Apache, opcional)
 
 Si la VM utiliza Apache con VirtualHosts, configurar un vhost cuyo `DocumentRoot`
 apunte a la carpeta `public/` del proyecto, y agregar el dominio elegido al
 archivo `hosts` local, apuntando a la IP de la VM correspondiente.
 
-### 6.9. Instalar dependencias de JavaScript
+### 7.9. Instalar dependencias de JavaScript
 
 ```bash
 npm install
@@ -275,7 +303,7 @@ npm run build
 > npm install
 > ```
 
-## 7. Flujo de trabajo (Git + Jira)
+## 8. Flujo de trabajo (Git + Jira)
 
 El equipo sigue una convención de ramas ligadas a tareas de Jira (clave `FH-X`):
 
@@ -289,7 +317,7 @@ Finalizado**. Al completar el trabajo de una rama y mergear su Pull Request, se
 deja constancia en un comentario de la tarea correspondiente en Jira, describiendo
 el alcance cumplido y las decisiones tomadas.
 
-## 8. Licencia
+## 9. Licencia
 
 Proyecto académico desarrollado como parte del curso ISW-811 de la Universidad
 Técnica Nacional. Sin fines comerciales.
