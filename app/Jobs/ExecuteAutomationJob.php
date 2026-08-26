@@ -19,6 +19,12 @@ class ExecuteAutomationJob implements ShouldQueue
 {
     use Queueable;
 
+    //FH-42 Cantidad maxima de intentos ante fallos transitorios.
+    public int $tries = 3;
+
+    //FH-42 Espera entre reintentos, creciente: 10s, luego 30s, luego 60s.
+    public array $backoff = [10, 30, 60];
+
     //FH-38 Mapa tipo de accion => clase adaptadora (patron adaptador, restriccion #3 del enunciado).
     //Sumar un proveedor nuevo solo implica agregar una entrada aqui, sin tocar el resto del job.
     //github.create_issue y email.send se suman cuando sus adaptadores esten listos.
@@ -48,7 +54,7 @@ class ExecuteAutomationJob implements ShouldQueue
      */
     public function handle(): void
     {
-        if ($this->executionId !== '' && $this->alreadyProcessed()) {
+        if ($this->executionId !== '' && $this->isDuplicate()) {
             Log::info("ExecuteAutomationJob: execution {$this->executionId} ya fue procesada, se descarta para no repetir acciones.");
             return;
         }
@@ -83,22 +89,30 @@ class ExecuteAutomationJob implements ShouldQueue
             $handler = new $handlerClass();
             $handler->execute($action, $this->triggerData);
         }
+
+        //FH-42 Recien aca, con todas las acciones ya ejecutadas sin errores, se marca la ejecucion
+        //como procesada. Si algo lanzo una excepcion antes de llegar aca, no se marca nada, y el
+        //reintento (tries/backoff de arriba) puede volver a correr todo desde cero.
+        $this->markProcessed();
     }
 
-    //FH-41 Revisa si esta clave de ejecucion ya fue registrada. Si no existe, la registra
-    //de una vez (reclama la clave) para que un reproceso posterior la encuentre y se detenga aqui.
-    private function alreadyProcessed(): bool
+    //FH-41 Revisa si esta clave de ejecucion ya fue registrada como completada.
+    private function isDuplicate(): bool
     {
-        if (AutomationExecution::where('execution_id', $this->executionId)->exists()) {
-            return true;
+        return AutomationExecution::where('execution_id', $this->executionId)->exists();
+    }
+
+    //FH-42 Registra la ejecucion como completada, solo despues de correr todas las acciones sin errores.
+    private function markProcessed(): void
+    {
+        if ($this->executionId === '') {
+            return;
         }
 
-        AutomationExecution::create([
-            'execution_id' => $this->executionId,
-            'automation_id' => $this->automationId,
-        ]);
-
-        return false;
+        AutomationExecution::firstOrCreate(
+            ['execution_id' => $this->executionId],
+            ['automation_id' => $this->automationId]
+        );
     }
 
     //FH-38 Todas las condiciones deben cumplirse (AND) para que la automatizacion continue.

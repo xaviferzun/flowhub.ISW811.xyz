@@ -31,7 +31,9 @@ class DiscordSendMessageAction implements ActionHandler
         $response = Http::post($connection->webhook_url, ['content' => $message]);
 
         if ($response->failed()) {
-            Log::error("Fallo al enviar mensaje a Discord (automation #{$action->automation_id}): {$response->status()}");
+            //Se lanza la excepcion (en vez de solo loguear) para que el job la detecte como fallo
+            //y reintente segun su configuracion de tries/backoff.
+            throw new \RuntimeException("Fallo al enviar mensaje a Discord (automation #{$action->automation_id}): {$response->status()}");
         }
     }
 }
