@@ -4,6 +4,7 @@ use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\ConnectedAccountController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TwoFactorController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -19,6 +20,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/automations', [AutomationController::class, 'store'])->name('automations.store');
     Route::patch('/automations/{automation}/toggle', [AutomationController::class, 'toggle'])->name('automations.toggle');
     Route::delete('/automations/{automation}', [AutomationController::class, 'destroy'])->name('automations.destroy');
+    Route::get('/two-factor', [TwoFactorController::class, 'show'])->name('two-factor.show');
+    Route::post('/two-factor/enable', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
+    Route::post('/two-factor/disable', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
 
     Route::get('/connections', [ConnectedAccountController::class, 'index'])->name('connections.index');
     Route::delete('/connections/{connectedAccount}', [ConnectedAccountController::class, 'destroy'])->name('connections.destroy');

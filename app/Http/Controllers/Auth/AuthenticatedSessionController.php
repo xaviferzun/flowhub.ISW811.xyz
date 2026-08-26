@@ -26,6 +26,17 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $user = Auth::user();
+
+        //FH-50 Si el usuario tiene 2FA activado cierra la sesion abierta y se redirije a validar su codigo OTP.
+        if ($user->google2fa_enabled) {
+            Auth::logout();
+
+            $request->session()->put('2fa_user_id', $user->id);
+
+            return redirect()->route('two-factor.challenge');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard', absolute: false));
@@ -39,7 +50,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
